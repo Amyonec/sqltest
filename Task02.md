@@ -22,17 +22,74 @@
 -  FROM product;
 # 二、算术运算符和比较运算符
 - 2.1 算术运算符
+- SQL语句中可以使用的四则运算的主要运算符如下：
+- 含义	运算符
+- 加法	+
+- 减法	-
+- 乘法	*
+- 除法	/
 - 2.2 比较运算符
+- SQL常见比较运算符如下：
+- 运算符	含义
+- =	和~相等
+- <>	和~不相等
+- >=	大于等于~
+- >	大于~
+- <=	小于等于~
+- <	小于~
 - 2.3 常用法则
+- -- SQL语句中也可以使用运算表达式
+- SELECT product_name, sale_price, sale_price * 2 AS "sale_price x2"
+-  FROM product;
+- -- WHERE子句的条件表达式中也可以使用计算表达式
+- SELECT product_name, sale_price, purchase_price
+-  FROM product
+-  WHERE sale_price-purchase_price >= 500;
+- /* 对字符串使用不等号
+- 首先创建chars并插入数据
+- 选取出大于‘2’的SELECT语句*/
+- -- DDL：创建表
+- CREATE TABLE chars
+- （chr CHAR（3）NOT NULL，
+- PRIMARY KEY（chr））;
+- -- 选取出大于'2'的数据的SELECT语句('2'为字符串)
+- SELECT chr
+-    FROM chars
+-    WHERE chr > '2';
+- -- 选取NULL的记录
+- SELECT product_name，purchase_price
+-   FROM product
+-   WHERE purchase_price IS NULL;
+- -- 选取不为NULL的记录
+- SELECT product_name，purchase_price
+-   FROM product
+-  WHERE purchase_price IS NOT NULL;
 # 三、逻辑运算符
 - 3.1 NOT运算符
+- 想要表示“不是……”时，除了前文的<>运算符外，还存在另外一个表示否定、使用范围更广的运算符：NOT。
+- NOT不能单独使用
 - 3.2 AND运算符和OR运算符
+- 当希望同时使用多个查询条件时，可以使用AND或者OR运算符。
+- AND 相当于“并且”，类似数学中的取交集；
+- OR 相当于“或者”，类似数学中的取并集
 - 3.3 通过括号优先处理
 - 3.4 真值表
+- AND 运算符**：**两侧的真值都为真时返回真，除此之外都返回假。
+- OR 运算符**：**两侧的真值只要有一个不为假就返回真，只有当其两侧的真值都为假时才返回假。
+- NOT运算符**：**只是单纯的将真转换为假，将假转换为真。
 - 3.5 含有NULL时的真值
+- NULL的真值结果既不为真，也不为假，因为并不知道这样一个值。
+- 那该如何表示呢？
+- 这时真值是除真假之外的第三种值——不确定（UNKNOWN）。一般的逻辑运算并不存在这第三种值。SQL 之外的语言也基本上只使用真和假这两种真值。与通常的逻辑运算被称为二值逻辑相对，只有 SQL 中的逻辑运算被称为三值逻辑。
 - 练习题-第一部分
-- 练习题1
-- 练习题2
+- 练习题1 编写一条SQL语句，从product（商品）表中选取出“登记日期（regist在2009年4月28日之后”的商品，查询结果要包含product_name和regist_date两列。
+- SELECT product_name,regist_date
+- FROM product
+- WHERE regist >='2009-4-28';
+- 练习题2 请说出对product 表执行如下3条SELECT语句时的返回结果。
+- 1.product表中所有purchase_price值等于NULL的数据
+- 2.product表中所有purchase_price值不等于NULL的数据
+- 3.product表中所有purchase_price值大于NULL的数据
 - 练习题3
 - 练习题4
 # 四、对表进行聚合查询
