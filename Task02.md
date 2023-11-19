@@ -88,27 +88,90 @@
 - WHERE regist >='2009-4-28';
 - 练习题2 请说出对product 表执行如下3条SELECT语句时的返回结果。
 - 1.product表中所有purchase_price值等于NULL的数据
+- SELECT *
+- FROM product
+- WHERE purchase_price is NULL;
 - 2.product表中所有purchase_price值不等于NULL的数据
+- SELECT *
+- FROM product
+- WHERE purchase_price is NOT NULL;
 - 3.product表中所有purchase_price值大于NULL的数据
-- 练习题3
-- 练习题4
+- SELECT *
+- FROM product
+- WHERE purchase_price is NOT NULL;
+- NULL无法通过常规的比较操作符（如>、<、=）进行判断，因为NULL代表未知值或缺失值，因此无法与其他值进行比较。在SQL中，判断某个值是否为NULL应该使用IS NULL或IS NOT NULL语句。
+- 练习题3 代码清单2-22（2-2节）中的SELECT语句能够从product表中取出“销售单价（saleprice）比进货单价（purchase price）高出500日元以上”的商品。请写出两条可以得到相同结果的SELECT语句。执行结果如下所示。
+- -1- SELECT * 
+- FROM product
+- WHERE sale_price - purchase_price >= 500;
+- -2- SELECT *
+- FROM product
+- WHERE sale_price > purchase_price + 500;
+- 练习题4 请写出一条SELECT语句，从product表中选取出满足“销售单价打九折之后利润高于100日元的办公用品和厨房用具”条件的记录。查询结果要包括product_name列、product_type列以及销售单价打九折之后的利润（别名设定为profit）。
+- SELECT product_name,product_type,(sale_price*0.9 - purchase_price) AS profit
+- FROM product
+- WHERE (sale_price*0.9 - purchase_price) >= 100 AND (product_type='办公用品' OR product_type='厨房用具');
+- AS关键字应该用在SELECT语句中进行列别名的定义，而不是用在WHERE子句中,不能在WHERE子句中直接使用SELECT中的别名（如"profit"）。这是因为别名是在SELECT子句执行后才被计算，而WHERE子句在此之前执行。
 # 四、对表进行聚合查询
 - 4.1 聚合函数
+- SQL中用于汇总的函数叫做聚合函数。以下五个是最常用的聚合函数：
+- COUNT：计算表中的记录数（行数）
+- SUM：计算表中数值列中数据的合计值
+- AVG：计算表中数值列中数据的平均值
+- MAX：求出表中任意列中数据的最大值
+- MIN：求出表中任意列中数据的最小值
 - 4.2 使用聚合函数删除重复值
+- -- 计算去除重复数据后的数据行数
+- SELECT COUNT(DISTINCT product_type)
+-  FROM product;
+- 是否使用DISTINCT时的动作差异（SUM函数）
+-  SELECT SUM(sale_price), SUM(DISTINCT sale_price)
+-   FROM product;
 - 4.3 常用法则
+- COUNT函数的结果根据参数的不同而不同。COUNT(*)会得到包含NULL的数据行数，而COUNT(<列名>)会得到NULL之外的数据行数。
+- 聚合函数会将NULL排除在外。但COUNT(*)例外，并不会排除NULL。
+- MAX/MIN函数几乎适用于所有数据类型的列。SUM/AVG函数只适用于数值类型的列。
+- 想要计算值的种类时，可以在COUNT函数的参数中使用DISTINCT。
+- 在聚合函数的参数中使用DISTINCT，可以删除重复数据。
 # 五、对表进行分组
-- 5.1 GROUP BY语句
-- 5.2 聚合键中包含NULL时
-- 5.3 GROUP BY书写位置
+- 5.1 GROUP BY语句  之前使用聚合函数都是会整个表的数据进行处理，当你想将进行分组汇总时（即：将现有的数据按照某列来汇总统计），GROUP BY可以帮助你：
+- 5.2 聚合键中包含NULL时   此时会将NULL作为一组特殊数据进行处理
+- 5.3 GROUP BY书写位置   GROUP BY的子句书写顺序有严格要求，不按要求会导致SQL无法正常执行，目前出现过的子句书写****顺序为：
+- 1.SELECT → 2. FROM → 3. WHERE → 4. GROUP BY
+-  其中前三项用于筛选数据，GROUP BY对筛选出的数据进行处理
 - 5.4 在WHERE子句中使用GROUP BY
+- SELECT purchase_price, COUNT(*)
+-   FROM product
+-   WHERE product_type = '衣服'
+-   GROUP BY purchase_price;
 - 5.5 常见错误
+- 在使用聚合函数及GROUP BY子句时，经常出现的错误有：
+- 在聚合函数的SELECT子句中写了聚合健以外的列 使用COUNT等聚合函数时，SELECT子句中如果出现列名，只能是GROUP BY子句中指定的列名（也就是聚合键）。
+- 在GROUP BY子句中使用列的别名 SELECT子句中可以通过AS来指定别名，但在GROUP BY中不能使用别名。因为在DBMS中 ,SELECT子句在GROUP BY子句后执行。
+- 在WHERE中使用聚合函数 原因是聚合函数的使用前提是结果集已经确定，而WHERE还处于确定结果集的过程中，所以相互矛盾会引发错误。 如果想指定条件，可以在SELECT，HAVING（下面马上会讲）以及ORDER BY子句中使用聚合函数。
 # 六、为聚合结果指定条件
-- 6.1 用HAVING得到特定分组
+- 6.1 用HAVING得到特定分组  WHERE子句只能指定记录（行）的条件，而不能用来指定组的条件（例如，“数据行数为 2 行”或者“平均值为 500”等）。可以在GROUP BY后使用HAVING子句。HAVING的用法类似WHERE
 - 6.2 HAVING特点
+- HAVING子句用于对分组进行过滤，可以使用数字、聚合函数和GROUP BY中指定的列名（聚合键）。
 # 七、对查询结果进行排序
-- 7.1 ORDER BY
+- 7.1 ORDER BY   SQL中的执行结果是随机排列的，当需要按照特定顺序排序时，可已使用ORDER BY子句。
+- 默认为升序排列，降序排列为DESC
 - 7.2 ORDER BY中列名可使用别名
+- 前文讲GROUP BY中提到，GROUP BY 子句中不能使用SELECT 子句中定义的别名，但是在 ORDER BY 子句中却可以使用别名。为什么在GROUP BY中不可以而在ORDER BY中可以呢？
+- 这是因为SQL在使用 HAVING 子句时 SELECT 语句的执行****顺序为：
+- FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY
+- 其中SELECT的执行顺序在 GROUP BY 子句之后，ORDER BY 子句之前。也就是说，当在ORDER BY中使用别名时，已经知道了SELECT设置的别名存在，但是在GROUP BY中使用别名时还不知道别名的存在，所以在ORDER BY中可以使用别名，但是在GROUP BY中不能使用别名****。
 - 练习题-第二部分
-- 练习题5
-- 练习题6
-- 练习题7
+- 练习题5  请指出下述SELECT语句中所有的语法错误。SELECT product_id, SUM（product_name) FROM product GROUP BY product_type WHERE regist_date > '2009-09-01';
+- GROUP BY语句要在WHERE语句之后
+- SUM（product_name)不能用SUM
+- GROUP BY product_type 与前面SELECT product_id,不一致
+- 练习题6。请编写一条SELECT语句，求出销售单价（sale_price列）合计值大于进货单价（purchase_price列）合计值1.5倍的商品种类。执行结果如下所示。
+- SELECT product_type,SUM(sale_price),sum(purchase_price)
+- FROM prouduct
+- GROUP BY prouduct_type
+- HAVING SUM(sale_price)>SUM(purchase_price)*1.5;
+- 练习题7  此前我们曾经使用SELECT语句选取出了product（商品）表中的全部记录。当时我们使用了ORDER BY子句来指定排列顺序，但现在已经无法记起当时如何指定的了。请根据下列执行结果，思考ORDERBY子句的内容。
+- SELECT *
+- FROM product
+- ORDER BY regist_date DESC,sale_price;
