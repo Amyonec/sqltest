@@ -100,7 +100,7 @@
 -   关联子查询中我们将外面的product表标记为p1，将内部的product设置为p2，而且通过WHERE语句连接了两个查询。
 - 小结
 - 视图和子查询是数据库操作中较为基础的内容，对于一些复杂的查询需要使用子查询加一些条件语句组合才能得到正确的结果。但是无论如何对于一个SQL语句来说都不应该设计的层数非常深且特别复杂，不仅可读性差而且执行效率也难以保证，所以尽量有简洁的语句来完成需要的功能。
-- 练习题-第一部分
+# 练习题-第一部分
 - 3.1创建出满足下述三个条件的视图（视图名称为 ViewPractice5_1）。使用 product（商品）表作为参照表，假设表中包含初始状态的 8 行数据。
 - 条件 1：销售单价大于等于 1000 日元。
 - 条件 2：登记日期是 2009 年 9 月 20 日。
@@ -109,10 +109,10 @@
 -    AS
 -    SELECT product_name,sale_price,regist_date
 -    FROM product
--    WHERE sale_price>1000 and regist_date = '2009-9-20';
+-    WHERE sale_price>=1000 and regist_date = '2009-9-20';
 - 3.2 向习题一中创建的视图 ViewPractice5_1 中插入如下数据，会得到什么样的结果呢？
 - INSERT INTO ViewPractice5_1 VALUES (' 刀子 ', 300, '2009-11-02');
-- 结果没有变化
+- 结果会报错，因为不满足原始表格非空条件
 - 3.3请根据如下结果编写 SELECT 语句，其中 sale_price_all 列为全部商品的平均销售单价。
 - SELECT product_id,product_name,product_type,sale_price,(SELECT AVG(sale_price)
           FROM product) AS avg_sale_price
@@ -120,8 +120,8 @@
 - 3.4根据习题一中的条件编写一条 SQL 语句，创建一幅包含如下数据的视图（名称为AvgPriceByType）。
 - ALTER VIEW AvgPriceByType
 -    AS
--    SELECT product_id,product_name,product_type,sale_price,(SELECT AVG(sale_price) FROM product AS P2 WHERE P1.product_type =P2.product_type) AS avg_sale_price
--    FROM product AS P1
+-    SELECT product_id,product_name,product_type,sale_price,(SELECT AVG(sale_price) FROM product P2 WHERE P1.product_type =P2.product_type GROUP BY P1.product_type) AS avg_sale_price
+-    FROM product P1
 # 3.3 各种各样的函数
 - 3.3.1 算数函数
 - (+ - * /四则运算)
@@ -289,20 +289,27 @@
 - 总结：
 - 当待转换列为数字时，可以使用SUM AVG MAX MIN等聚合函数；
 - 当待转换列为文本时，可以使用MAX MIN等聚合函数
-- 练习题-第二部分
+# 练习题-第二部分
 - 3.5 运算或者函数中含有 NULL 时，结果全都会变为NULL ？（判断题）
 - 是的，运算或者函数中含有 NULL 时，结果全都会变为NULL
 - 3.6 对本章中使用的 product（商品）表执行如下 2 条 SELECT 语句，能够得到什么样的结果呢？
-- purchase_price列中不含(500, 2800, 5000, NUL）这几个数据的值
+- SELECT product_name, purchase_price
+-  FROM product
+- WHERE purchase_price NOT IN (500, 2800, 5000);
+- purchase_price列中不含(500, 2800, 5000）这几个数据的值,谓语无法与NULL进行比较
+- SELECT product_name, purchase_price
+-  FROM product
+- WHERE purchase_price NOT IN (500, 2800, 5000, NULL);
+- 返回0条记录，因为NOT IN的参数不能包含NULL，否则结果为NULL
 - 3.7按照销售单价（ sale_price）对练习 6.1 中的 product（商品）表中的商品进行如下分类。
 - 低档商品：销售单价在1000日元以下（T恤衫、办公用品、叉子、擦菜板、 圆珠笔）
 - 中档商品：销售单价在1001日元以上3000日元以下（菜刀）
 - 高档商品：销售单价在3001日元以上（运动T恤、高压锅）
 - 请编写出统计上述商品种类中所包含的商品数量的 SELECT 语句，结果如下所示。
 - SELECT
-- CASE WHEN sale_price <=1000 THEN COUNT(sale_price) END AS low_price
-- CASE WHEN sale_price >1000 AND sale_price <=3000 THEN COUNT(sale_price) END AS mid_price
-- CASE WHEN sale_price >3000 THEN COUNT(sale_price) END AS high_price
+- SUM(CASE WHEN sale_price <=1000 THEN 1 ELSE 0 END) AS low_price
+- SUM(CASE WHEN sale_price >1000 AND sale_price <=3000 HEN 1 ELSE 0 END) AS mid_price
+- SUM(CASE WHEN sale_price >3000 HEN 1 ELSE 0 END) AS high_price
 - FROM product;
 
 
