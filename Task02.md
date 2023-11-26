@@ -1,4 +1,4 @@
-
+# 本笔记为阿里云天池龙珠计划SQL训练营的学习内容，链接为：https://tianchi.aliyun.com/specials/promotion/aicampsql；
 # Task02：SQL基础查询与排序
 # 一、SELECT语句基础
 - 1.1 从表中选取数据
