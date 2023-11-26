@@ -1,0 +1,112 @@
+# 👋 本笔记为阿里云天池龙珠计划SQL训练营的学习内容，链接为：https://tianchi.aliyun.com/specials/promotion/aicampsql；
+#  👀 Task01：初识数据库与SQL
+# 目录
+# 一、初识数据库
+- 1.1 DBMS的种类
+-    层次数据库（Hierarchical Database，HDB）
+-    关系数据库（Relational Database，RDB）
+-    面向对象数据库（Object Oriented Database，OODB）
+-    XML数据库（XML Database，XMLDB）
+-    值存储系统（Key-Value Store，KVS），举例：MongoDB
+- 1.2 RDBMS的常见系统结构
+-    使用 RDBMS 时，最常见的系统结构就是客户端 / 服务器类型（C/S类型）这种结构
+- 1.3 数据库安装
+- 1.3.1 阿里云MySQL服务器使用介绍
+- 1.3.2 本地MySQL环境搭建方法介绍
+# 二、初识 SQL
+- 2.1 概念介绍
+-     SQL是为操作数据库而开发的语言。国际标准化组织（ISO）为 SQL 制定了相应的标准，SQL 语句可以分为以下三类.
+-     DDL（Data Definition Language，数据定义语言） 用来创建或者删除存储数据用的数据库以及数据库中的表等对象。DDL 包含以下几种指令。
+-          CREATE ： 创建数据库和表等对象  
+-           DROP ： 删除数据库和表等对象
+-           ALTER ： 修改数据库和表等对象的结构
+-   DML（Data Manipulation Language，数据操纵语言） 用来查询或者变更表中的记录。DML 包含以下几种指令。
+-        SELECT ：查询表中的数据
+-        INSERT ：向表中插入新数据
+-        UPDATE ：更新表中的数据
+-        DELETE ：删除表中的数据
+-   DCL（Data Control Language，数据控制语言） 用来确认或者取消对数据库中的数据进行的变更。除此之外，还可以对 RDBMS 的用户是否有权限操作数据库中的对象（数据库表等）进行设定。DCL 包含以下几种指令。
+-        COMMIT ： 确认对数据库中的数据进行的变更
+-        ROLLBACK ： 取消对数据库中的数据进行的变更
+-        GRANT ： 赋予用户操作权限
+-        REVOKE ： 取消用户的操作权限
+-  2.2 SQL的基本书写规则
+-       SQL语句要以分号（ ; ）结尾
+-       SQL 不区分关键字的大小写，但是插入到表中的数据是区分大小写的
+-       win 系统默认不区分表名及字段名的大小写
+-       linux / mac 默认严格区分表名及字段名的大小写
+-       本教程已统一调整表名及字段名的为小写，以方便初学者学习使用。
+-       常数的书写方式是固定的  'abc', 1234, '26 Jan 2010', '10/01/26', '2010-01-26'…
+-       单词需要用半角空格或者换行来分隔
+-       SQL 语句的单词之间需使用半角空格或换行符来进行分隔，且不能使用全角空格作为单词的分隔符，否则会发生错误，出现无法预期的结果。
+- 2.3 数据库的创建（ CREATE DATABASE 语句）
+-       CREATE DATABASE < 数据库名称 > ;
+-  2.4 表的创建（ CREATE TABLE 语句）
+-       CREATE TABLE < 表名 >
+-         ( < 列名 1> < 数据类型 > < 该列所需约束 > ,
+-          < 列名 2> < 数据类型 > < 该列所需约束 > ,
+-          < 列名 3> < 数据类型 > < 该列所需约束 > ,
+-          < 列名 4> < 数据类型 > < 该列所需约束 > ,
+-          .
+-          .
+-          .
+-          < 该表的约束 1> , < 该表的约束 2> ,……);
+- 2.5 命名规则
+-       只能使用半角英文字母、数字、下划线（_）作为数据库、表和列的名称
+-       名称必须以半角英文字母开头
+- 2.6 数据类型的指定
+-      数据库创建的表，所有的列都必须指定数据类型，每一列都不能存储与该列数据类型不符的数据。
+-     四种最基本的数据类型
+-       INTEGER型 用来指定存储整数的列的数据类型（数字型），不能存储小数。
+-       CHAR 型 用来存储定长字符串，当列中存储的字符串长度达不到最大长度的时候，使用半角空格进行补足，由于会浪费存储空间，所以一般不使用。
+-       VARCHAR 型 用来存储可变长度字符串，定长字符串在字符数未达到最大长度时会用半角空格补足，但可变长字符串不同，即使字符数未达到最大长度，也不会用半角空格补足。
+-       DATE 型 用来指定存储日期（年月日）的列的数据类型（日期型）。
+- 2.7 约束的设置
+-      约束是除了数据类型之外，对列中存储的数据进行限制或者追加条件的功能。
+-       NOT NULL是非空约束，即该列必须输入数据。
+-      PRIMARY KEY是主键约束，代表该列是唯一值，可以通过该列取出特定的行的数据。
+- 2.8 表的删除和更新
+-      删除表的语法：DROP TABLE < 表名 > ;  //需要特别注意的是，删除的表是无法恢复的，只能重新插入，请执行删除操作时无比要谨慎
+-      添加列的 ALTER TABLE 语句:ALTER TABLE < 表名 > ADD COLUMN < 列的定义 >;
+-      删除列的 ALTER TABLE 语句:ALTER TABLE < 表名 > DROP COLUMN < 列名 >;  //ALTER TABLE 语句和 DROP TABLE 语句一样，执行之后无法恢复。误添的列可以通过 ALTER TABLE 语句删除，或者将表全部删除之后重新再创建。
+-      清空表内容:TRUNCATE TABLE TABLE_NAME;  //优点：相比drop``/``delete，truncate用来清除数据时，速度最快。
+-      数据的更新:UPDATE <表名>
+-                 SET <列名> = <表达式> [, <列名2>=<表达式2>...];  
+-                 WHERE <条件>;  -- 可选，非常重要。
+-                 ORDER BY 子句;  --可选
+-                 LIMIT 子句; --可选
+-            // 使用 update 时要注意添加 where 条件，否则将会将所有的行按照语句修改
+-            // 使用 UPDATE 也可以将列更新为 NULL（该更新俗称为NULL清空）。此时只需要将赋值表达式右边的值直接写为 NULL 即可。
+-            // 和 INSERT 语句一样， UPDATE 语句也可以将 NULL 作为一个值来使用。但是，只有未设置 NOT NULL 约束和主键约束的列才可以清空为NULL。**如果将设置了上述约束的列更新为 NULL，就会出错，这点与INSERT 语句相同。
+-            // UPDATE 语句的 SET 子句支持同时将多个列作为更新对象。需要明确的是，SET 子句中的列不仅可以是两列，还可以是三列或者更多。
+-2.9  product 表中插入数据
+-       基本语法：INSERT INTO <表名> (列1, 列2, 列3, ……) VALUES (值1, 值2, 值3, ……); 
+-      //对表进行全列 INSERT 时，可以省略表名后的列清单。这时 VALUES子句的值会默认按照从左到右的顺序赋给每一列。
+-      //原则上，执行一次 INSERT 语句会插入一行数据。插入多行时，通常需要循环执行相应次数的 INSERT 语句。其实很多 RDBMS 都支持一次插入多行数据
+-      //INSERT 语句中想给某一列赋予 NULL 值时，可以直接在 VALUES子句的值清单中写入 NULL。想要插入 NULL 的列一定不能设置 NOT NULL 约束。
+-      //还可以向表中插入默认值（初始值）。可以通过在创建表的CREATE TABLE 语句中设置DEFAULT约束来设定默认值。
+-      //可以使用INSERT … SELECT 语句从其他表复制数据。
+# 三、练习题
+- 3.1 编写一条 CREATE TABLE 语句，用来创建一个包含表 1-A 中所列各项的表 Addressbook （地址簿），并为 regist_no （注册编号）列设置主键约束
+- CREATE TABLE Addressbook (
+-  regist_no INTEGER NOT NULL,
+-  name VARCHAR(100) NOT NULL,
+-  address VARCHAR(256) NOT NULL,
+-  tel_no CHAR(10),
+-  mail_address CHAR(20)
+-  PRIMARY KEY (regist_no));
+- 3.2 假设在创建练习1.1中的 Addressbook 表时忘记添加如下一列 postal_code （邮政编码）了，请把此列添加到 Addressbook 表中。
+-   ALTER TABLE Addressbook ADD COLUMN postal_code CHAR(8) NOT NULL;    
+- 3.3编写 SQL 语句来删除 Addressbook 表。
+-    DROP TABLE Addressbook;    
+- 3.4 编写 SQL 语句来恢复删除掉的 Addressbook 表。
+-     CREATE TABLE Addressbook (
+-     regist_no INTEGER NOT NULL,
+-     name VARCHAR(100) NOT NULL,
+-     address VARCHAR(256) NOT NULL,
+-     tel_no CHAR(10),
+-     mail_address CHAR(20)
+-     postal_code CHAR(8) NOT NULL
+-     PRIMARY KEY (regist_no));
+
+
