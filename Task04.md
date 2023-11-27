@@ -71,28 +71,155 @@
 - 4.1.5.1借助并集和差集迂回实现交集运算 INTERSECT
 - 通过观察集合运算的文氏图, 我们发现, 两个集合的交可以看作是两个集合的并去掉两个集合的对称差。
 # 4.2连结(JOIN)
+- 连结(JOIN)就是使用某种关联条件(一般是使用相等判断谓词"="), 将其他表中的列添加过来, 进行“添加列”的集合运算. 可以说,连结是 SQL 查询的核心操作, 掌握了连结, 能够从两张甚至多张表中获取列, 能够将过去使用关联子查询等过于复杂的查询简化为更加易读的形式, 以及进行一些更加复杂的查询.
+- SQL 中的连结有多种分类方法, 我们这里使用最基础的内连结和外连结的分类方法来分别进行讲解.
 - 4.2.1 内连结(INNER JOIN)
-
+- -- 内连结
+- FROM <tb_1> INNER JOIN <tb_2> ON <condition(s)>
 - 4.2.1.1 使用内连结从两个表获取信息
+- 关于内连结,需要注意以下三点:
+- 要点一: 进行连结时需要在 FROM 子句中使用多张表.
+- 要点二:必须使用 ON 子句来指定连结条件.
+- 要点三: SELECT 子句中的列最好按照 表名.列名 的格式来使用.
 - 4.2.1.2 结合 WHERE 子句使用内连结
+- 如果需要在使用内连结的时候同时使用 WHERE 子句对检索结果进行筛选, 则需要把 WHERE 子句写在 ON 子句的后边
+- 第一种增加 WEHRE 子句的方式, 就是把上述查询作为子查询, 用括号封装起来, 然后在外层查询增加筛选条件.
+- SELECT * FROM (-- 第一步查询的结果
+-        SELECT SP.shop_id,SP.shop_name,SP.product_id,P.product_name,P.product_type,P.sale_price,SP.quantity
+-          FROMshopproduct AS SP
+-         INNER JOINproduct AS P
+-            ON SP.product_id = P.product_id) AS STEP1
+-    WHERE shop_name = '东京'
+-    AND product_type = '衣服' ;
+- 但实际上, 如果我们熟知 WHERE 子句将在 FROM 子句之后执行, 也就是说, 在做完 INNER JOIN … ON 得到一个新表后, 才会执行 WHERE 子句, 那么就得到标准的写法:
+- SELECT  SP.shop_id,SP.shop_name,SP.product_id,P.product_name,P.product_type,P.sale_price,SP.quantity
+-  FROM shopproduct AS SP
+-     INNER JOIN product AS P
+-     ON SP.product_id = P.product_id
+-   WHERE SP.shop_name = '东京'
+-   AND P.product_type = '衣服' ;
+- 我们首先给出上述查询的执行顺序:FROM 子句->WHERE 子句->SELECT 子句
+- 此外, 一种不是很常见的做法是,还可以将 WHERE 子句中的条件直接添加在 ON 子句中, 这时候 ON 子句后最好用括号将连结条件和筛选条件括起来.但上述这种把筛选条件和连结条件都放在 ON 子句的写法, 不是太容易阅读, 不建议大家使用
+- 另外, 先连结再筛选的标准写法的执行顺序是, 两张完整的表做了连结之后再做筛选,如果要连结多张表, 或者需要做的筛选比较复杂时, 在写 SQL 查询时会感觉比较吃力. 在结合 WHERE 子句使用内连结的时候,
+- 我们也可以更改任务顺序, 并采用任务分解的方法,先分别在两个表使用 WHERE 进行筛选,然后把上述两个子查询连结起来.
 - 4.2.1.3结合 GROUP BY 子句使用内连结
+- 结合 GROUP BY 子句使用内连结, 需要根据分组列位于哪个表区别对待.
+- 最简单的情形, 是在内连结之前就使用 GROUP BY 子句.
+- 但是如果分组列和被聚合的列不在同一张表, 且二者都未被用于连结两张表, 则只能先连结, 再聚合.
+- SELECT SP.shop_id,SP.shop_name,MAX(P.sale_price) AS max_price
+-  FROMshopproduct AS SP
+-  INNER JOINproduct AS P
+-    ON SP.product_id = P.product_id
+-  GROUP BY SP.shop_id,SP.shop_name
 - 4.2.1.4自连结(SELF JOIN)
+- 之前的内连结, 连结的都是不一样的两个表. 但实际上一张表也可以与自身作连结, 这种连接称之为自连结. 需要注意, 自连结并不是区分于内连结和外连结的第三种连结, 自连结可以是外连结也可以是内连结, 它是不同于内连结外连结的另一个连结的分类方法.
 - 4.2.1.5内连结与关联子查询
+- 回忆第五章第三节关联子查询中的问题: 找出每个商品种类当中售价高于该类商品的平均售价的商品.当时我们是使用关联子查询来实现的.
+- SELECT product_type, product_name, sale_price
+-  FROM product AS P1
+- WHERE sale_price > (SELECT AVG(sale_price)
+-                       FROM product AS P2
+-                      WHERE P1.product_type = P2.product_type
+-                      GROUP BY product_type);
+- 使用内连结同样可以解决这个问题:
+- SELECT  P1.product_id,P1.product_name,P1.product_type,P1.sale_price,P2.avg_price
+  FROM product AS P1
+ INNER JOIN 
+   (SELECT product_type,AVG(sale_price) AS avg_price 
+      FROM product 
+     GROUP BY product_type) AS P2 
+    ON P1.product_type = P2.product_type
+ WHERE P1.sale_price > P2.avg_price;                 
 - 4.2.1.6自然连结(NATURAL JOIN)
+- 自然连结并不是区别于内连结和外连结的第三种连结, 它其实是内连结的一种特例–当两个表进行自然连结时, 会按照两个表中都包含的列名来进行等值内连结, 此时无需使用 ON 来指定连接条件.
+- SELECT *  FROM shopproduct NATURAL JOIN product
+- 使用自然连结还可以求出两张表或子查询的公共部分, 例如教材中 7-1 选取表中公共部分–INTERSECT 一节中的问题: 求表 product 和表 product2 中的公共部分, 也可以用自然连结来实现:
+- SELECT * FROM product NATURAL JOIN product2
 - 4.2.1.7使用连结求交集
+- 我们在上一节表的加减法里知道, MySQL 8.0 里没有交集运算, 我们当时是通过并集和差集来实现求交集的. 现在学了连结, 让我们试试使用连结来实现求交集的运算.
+- SELECT P1.*
+-  FROMproduct AS P1
+- INNER JOINproduct2 AS P2
+-    ON P1.product_id = P2.product_id
 - 4.2.2 外连结(OUTER JOIN)
+- 内连结会丢弃两张表中不满足 ON 条件的行,和内连结相对的就是外连结. 外连结会根据外连结的种类有选择地保留无法匹配到的行.
+- 按照保留的行位于哪张表,外连结有三种形式: 左连结, 右连结和全外连结.
+- 左连结会保存左表中无法按照 ON 子句匹配到的行, 此时对应右表的行均为缺失值; 右连结则会保存右表中无法按照 ON 子句匹配到的行, 此时对应左表的行均为缺失值; 而全外连结则会同时保存两个表中无法按照 ON子句匹配到的行, 相应的另一张表中的行用缺失值填充.
+- 三种外连结的对应语法分别为:
+- -- 左连结     
+- FROM <tb_1> LEFT  OUTER JOIN <tb_2> ON <condition(s)>
+- -- 右连结     
+- FROM <tb_1> RIGHT OUTER JOIN <tb_2> ON <condition(s)>
+- -- 全外连结
+- FROM <tb_1> FULL  OUTER JOIN <tb_2> ON <condition(s)>
 - 4.2.2.1 左连结与右连接
+- 由于连结时可以交换左表和右表的位置, 因此左连结和右连结并没有本质区别.接下来我们先以左连结为例进行学习. 所有的内容在调换两个表的前后位置, 并将左连结改为右连结之后, 都能得到相同的结果. 稍后再介绍全外连结的概念.
 - 4.2.2.2 使用左连结从两个表获取信息
+- SELECT SP.shop_id,SP.shop_name,SP.product_id,P.product_name,P.sale_price
+-  FROM product AS P
+-  LEFT OUTER JOIN shopproduct AS SP
+ -   ON SP.product_id = P.product_id;
+ -   ●外连结要点 1: 选取出单张表中全部的信息
+ -   ●****外连结要点 2:使用 LEFT、RIGHT 来指定主表.
 - 4.2.2.3结合 WHERE 子句使用左连结
+- 上一节也学习了结合WHERE子句使用内连结的方法, 但在结合WHERE子句使用外连结时, 由于外连结的结果很可能与内连结的结果不一样, 会包含那些主表中无法匹配到的行, 并用缺失值填写另一表中的列, 由于这些行的存在, 因此在外连结时使用WHERE子句, 情况会有些不一样.
+- 我们就可以试着把WHERE子句挪到外连结之前进行: 先写个子查询,用来从shopproduct表中筛选quantity<50的商品, 然后再把这个子查询和主表连结起来。
+- SELECT P.product_id,P.product_name,P.sale_price,SP.shop_id,SP.shop_name,SP.quantity 
+-  FROMproduct AS P
+-  LEFT OUTER JOIN-- 先筛选quantity<50的商品
+-   (SELECT *
+-      FROMshopproduct
+ -     WHERE quantity < 50 ) AS SP
+-     ON SP.product_id = P.product_id
 - 4.2.2.4在 MySQL 中实现全外连结
+- 有了对左连结和右连结的了解, 就不难理解全外连结的含义了. 全外连结本质上就是对左表和右表的所有行都予以保留, 能用 ON 关联到的就把左表和右表的内容在一行内显示, 不能被关联到的就分别显示, 然后把多余的列用缺失值填充。
+- 遗憾的是, MySQL8.0 目前还不支持全外连结, 不过我们可以对左连结和右连结的结果进行 UNION 来实现全外连结。
 - 4.2.3多表连结
+- 通常连结只涉及 2 张表,但有时也会出现必须同时连结 3 张以上的表的情况, 原则上连结表的数量并没有限制。
 - 4.2.3.1 多表进行内连结
+- SELECT SP.shop_id,SP.shop_name,SP.product_id,P.product_name,P.sale_price,IP.inventory_quantity
+-  FROM shopproduct AS SP
+- INNER JOIN product AS P
+-    ON SP.product_id = P.product_id
+- INNER JOIN Inventoryproduct AS IP
+-    ON SP.product_id = IP.product_id
+- WHERE IP.inventory_id = 'P001';
 - 4.2.3.2多表进行外连结
+- SELECT P.product_id,P.product_name,P.sale_price,SP.shop_id,SP.shop_name,IP.inventory_quantity
+-  FROMproduct AS P
+-   LEFT OUTER JOINshopproduct AS SP
+-    ON SP.product_id = P.product_id
+-   LEFT OUTER JOIN Inventoryproduct AS IP
+-    ON SP.product_id = IP.product_id
 - 4.2.4ON 子句进阶–非等值连结
+- 在刚开始介绍连结的时候, 书上提到过, 除了使用相等判断的等值连结, 也可以使用比较运算符来进行连接. 实际上, 包括比较运算符(<,<=,>,>=, BETWEEN)和谓词运算(LIKE, IN, NOT 等等)在内的所有的逻辑运算都可以放在 ON 子句内作为连结条件.
 - 4.2.4.1非等值自左连结(SELF JOIN)
+- SELECT	product_id, product_name, sale_price
+-       ,SUM(P2_price) AS cum_price 
+-  FROM
+ -       (SELECT  P1.product_id, P1.product_name, P1.sale_price
+ -               ,P2.product_id AS P2_id
+ -               ,P2.product_name AS P2_name
+ -               ,P2.sale_price AS P2_price 
+ -          FROM product AS P1 
+  -         LEFT OUTER JOIN product AS P2 
+ -            ON ((P1.sale_price > P2.sale_price)
+ -            OR (P1.sale_price = P2.sale_price 
+ -           AND P1.product_id<=P2.product_id))
+-	      ORDER BY P1.sale_price,P1.product_id) AS X
+- GROUP BY product_id, product_name, sale_price
+- ORDER BY sale_price,cum_price;
 - 4.2.5 交叉连结—— CROSS JOIN(笛卡尔积)
+- 之前的无论是外连结内连结, 一个共同的必备条件就是连结条件–ON 子句, 用来指定连结的条件. 如果你试过不使用这个连结条件的连结查询, 你可能已经发现, 结果会有很多行. 在连结去掉 ON 子句, 就是所谓的交叉连结(CROSS JOIN), 交叉连结又叫笛卡尔积, 后者是一个数学术语.
+- 两个集合做笛卡尔积, 就是使用集合 A 中的每一个元素与集合 B 中的每一个元素组成一个有序的组合. 数据库表(或者子查询)的并,交和差都是在纵向上对表进行扩张或筛选限制等运算的, 这要求表的列数及对应位置的列的数据类型"相容",
+-  因此这些运算并不会增加新的列, 而交叉连接(笛卡尔积)则是在横向上对表进行扩张, 即增加新的列, 这一点和连结的功能是一致的. 但因为没有了ON子句的限制, 会对左表和右表的每一行进行组合, 这经常会导致很多无意义的行出现在检索结果中. 当然, 在某些查询需求中, 交叉连结也有一些用处.
+- 交叉连结没有应用到实际业务之中的原因有两个.一是其结果没有实用价值,二是由于其结果行数太多,需要花费大量的运算时间和高性能设备的支持.
 - 4.2.5.1[扩展阅读]连结与笛卡儿积的关系
+- 察笛卡儿积和连结, 不难发现, 笛卡儿积可以视作一种特殊的连结(事实上笛卡儿积的语法也可以写作 CROSS JOIN), 这种连结的 ON 子句是一个恒为真的谓词.
+- 反过来思考, 在对笛卡儿积进行适当的限制之后, 也就得到了内连结和外连结.
 - 4.2.6 连结的特定语法和过时语法
+- 在笛卡尔积的基础上, 我们增加一个 WHERE 子句, 将之前的连结条件作为筛选条件加进去, 我们会发现, 得到的结果恰好是直接使用内连接的结果.
+- 
 # 练习题
 - 4.1
 - 4.2
